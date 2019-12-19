@@ -10,7 +10,6 @@ import io.kweb.dom.element.creation.tags.h1
 import io.kweb.dom.element.new
 import io.kweb.plugins.fomanticUI.fomantic
 import io.kweb.plugins.fomanticUI.fomanticUIPlugin
-import mu.KotlinLogging
 import kotlin.system.exitProcess
 
 // Written specifically for a Raspberry Pi 3 Model B+
@@ -20,8 +19,6 @@ fun main() {
 }
 
 class BreweryApp {
-
-    private val logger = KotlinLogging.logger {}
 
     private val control = RasPi()
     private val plugins = listOf(fomanticUIPlugin)
@@ -37,11 +34,11 @@ class BreweryApp {
                         val button1 = button(fomantic.ui.button).text("Off")
                         button1.on.click {
                             if (oneClicked) {
-                                oneClicked = false;
+                                oneClicked = false
                                 button1.text("Off")
                                 control.toggle()
                             } else {
-                                oneClicked = true;
+                                oneClicked = true
                                 button1.text("On")
                                 control.toggle()
                             }
