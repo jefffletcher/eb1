@@ -11,6 +11,7 @@ import io.kweb.dom.element.new
 import io.kweb.plugins.fomanticUI.fomantic
 import io.kweb.plugins.fomanticUI.fomanticUIPlugin
 import mu.KotlinLogging
+import kotlin.system.exitProcess
 
 // Written specifically for a Raspberry Pi 3 Model B+
 
@@ -22,6 +23,7 @@ class BreweryApp {
 
     private val logger = KotlinLogging.logger {}
 
+    private val control = RasPi()
     private val plugins = listOf(fomanticUIPlugin)
     private val server: Kweb
 
@@ -37,10 +39,17 @@ class BreweryApp {
                             if (oneClicked) {
                                 oneClicked = false;
                                 button1.text("Off")
+                                control.toggle()
                             } else {
                                 oneClicked = true;
                                 button1.text("On")
+                                control.toggle()
                             }
+                        }
+                        val shutdownButton = button(fomantic.ui.button).text("Shutdown")
+                        shutdownButton.on.click {
+                            control.shutdown()
+                            exitProcess(0)
                         }
                     }
                 }
