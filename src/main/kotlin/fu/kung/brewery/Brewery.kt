@@ -31,7 +31,7 @@ class BreweryApp {
             doc.body.new {
                 pageBorderAndTitle("Electric Brewery") {
                     div(fomantic.content).new {
-                        val button1 = button(fomantic.ui.button).text("Off")
+                        val button1 = button(fomantic.ui.toggle.button).text("Off")
                         button1.on.click {
                             if (oneClicked) {
                                 oneClicked = false
@@ -43,10 +43,12 @@ class BreweryApp {
                                 control.toggle()
                             }
                         }
-                        val shutdownButton = button(fomantic.ui.button).text("Shutdown")
-                        shutdownButton.on.click {
-                            control.shutdown()
-                            exitProcess(0)
+                        div(fomantic.ui.bottom.attached).new {
+                            val shutdownButton = button(fomantic.ui.button).text("Shutdown")
+                            shutdownButton.on.click {
+                                control.shutdown()
+                                exitProcess(0)
+                            }
                         }
                     }
                 }
