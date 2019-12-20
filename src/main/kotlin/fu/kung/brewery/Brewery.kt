@@ -3,13 +3,11 @@ package fu.kung.brewery
 import io.kweb.Kweb
 import io.kweb.dom.BodyElement
 import io.kweb.dom.element.creation.ElementCreator
-import io.kweb.dom.element.creation.tags.DivElement
-import io.kweb.dom.element.creation.tags.button
-import io.kweb.dom.element.creation.tags.div
-import io.kweb.dom.element.creation.tags.h1
+import io.kweb.dom.element.creation.tags.*
 import io.kweb.dom.element.new
 import io.kweb.plugins.fomanticUI.fomantic
 import io.kweb.plugins.fomanticUI.fomanticUIPlugin
+import mu.KotlinLogging
 import kotlin.system.exitProcess
 
 // Written specifically for a Raspberry Pi 3 Model B+
@@ -19,12 +17,14 @@ fun main() {
 }
 
 class BreweryApp {
+    private val logger = KotlinLogging.logger {}
 
     private val control = RasPi()
     private val plugins = listOf(fomanticUIPlugin)
     private val server: Kweb
 
     private var oneClicked = false
+
 
     init {
         server = Kweb(port = 7777, debug = true, plugins = plugins, buildPage = {
@@ -43,10 +43,14 @@ class BreweryApp {
                                 control.toggle()
                             }
                         }
+                        p().text(control.hltTemperature.map { "HLT: $it °F" })
+                        p().text(control.mashTemperature.map { "Mash: $it °F" })
                         div(fomantic.ui.bottom.attached).new {
                             val shutdownButton = button(fomantic.ui.button).text("Shutdown")
                             shutdownButton.on.click {
                                 control.shutdown()
+
+                                logger.info("User initiated shutdown. Exiting.")
                                 exitProcess(0)
                             }
                         }
