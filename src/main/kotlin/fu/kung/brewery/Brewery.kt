@@ -30,22 +30,71 @@ class BreweryApp {
         server = Kweb(port = 7777, debug = true, plugins = plugins, buildPage = {
             doc.body.new {
                 pageBorderAndTitle("Electric Brewery") {
-                    div(fomantic.content).new {
-                        val button1 = button(fomantic.ui.toggle.button).text("Off")
-                        button1.on.click {
-                            if (oneClicked) {
-                                oneClicked = false
-                                button1.text("Off")
-                                control.toggle()
-                            } else {
-                                oneClicked = true
-                                button1.text("On")
-                                control.toggle()
+                    div(fomantic.column).new {
+                        div(fomantic.ui.top.attached.segment).new {
+                            val button1 = button(fomantic.ui.toggle.button).text("Off")
+                            button1.on.click {
+                                if (oneClicked) {
+                                    oneClicked = false
+                                    button1.text("Off")
+                                    control.toggle()
+                                } else {
+                                    oneClicked = true
+                                    button1.text("On")
+                                    control.toggle()
+                                }
                             }
                         }
-                        p().text(control.hltTemperature.map { "HLT: $it °F" })
-                        p().text(control.mashTemperature.map { "Mash: $it °F" })
-                        div(fomantic.ui.bottom.attached).new {
+                        div(fomantic.ui.attached.segment).new {
+                            div(fomantic.ui.horizontal.segments).new {
+                                div(fomantic.ui.segment).new {
+                                    p().text(control.hltTemperature.map { "HLT: $it °F" })
+                                    div(fomantic.ui.labeled.input).new {
+                                        a(fomantic.ui.label).text("Target")
+                                        val hltTarget = input(type = InputType.text)
+                                        hltTarget.value = control.hltTarget
+                                        val hltEnable =
+                                            button(fomantic.ui.red.inverted.button).text(control.hltEnabledText)
+                                        control.hltEnabledText.addListener { _, new ->
+                                            if (new == "Off") {
+                                                hltEnable.setClasses("ui red inverted button")
+                                            } else {
+                                                hltEnable.setClasses("ui red button")
+                                            }
+                                        }
+                                        hltEnable.on.click {
+                                            control.toggleHlt()
+                                            hltEnable.blur()
+                                        }
+                                    }
+                                }
+                                div(fomantic.ui.segment).new {
+                                    p().text(control.mashTemperature.map { "Mash: $it °F" })
+                                }
+                                div(fomantic.ui.segment).new {
+                                    p().text(control.boilTemperature.map { "Boil: $it °F" })
+                                    div(fomantic.ui.labeled.input).new {
+                                        a(fomantic.ui.label).text("Target")
+                                        val boilTarget = input(type = InputType.text)
+                                        boilTarget.value = control.boilTarget
+                                        val boilEnable =
+                                            button(fomantic.ui.red.inverted.button).text(control.boilEnabledText)
+                                        control.boilEnabledText.addListener { _, new ->
+                                            if (new == "Off") {
+                                                boilEnable.setClasses("ui red inverted button")
+                                            } else {
+                                                boilEnable.setClasses("ui red button")
+                                            }
+                                        }
+                                        boilEnable.on.click {
+                                            control.toggleBoil()
+                                            boilEnable.blur()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        div(fomantic.ui.attached.segment).new {
                             val shutdownButton = button(fomantic.ui.button).text("Shutdown")
                             shutdownButton.on.click {
                                 control.shutdown()
@@ -66,17 +115,6 @@ class BreweryApp {
     ) {
         div(fomantic.ui.main.container).new {
             div(fomantic.column).new {
-                //                div(fomantic.ui.vertical.segment).new {
-//                    div(fomantic.ui.message).new {
-//                        p().innerHTML(
-//                            """
-//                                You're really doing it!
-//                            """
-//                                .trimIndent()
-//                        )
-//                    }
-//                }
-
                 div(fomantic.ui.vertical.segment).new {
                     h1(fomantic.ui.dividing.header).text(title)
                     content(this)

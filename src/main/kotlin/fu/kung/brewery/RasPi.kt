@@ -14,6 +14,9 @@ import kotlin.streams.toList
 class RasPi {
     private val logger = KotlinLogging.logger {}
 
+    private val on = "On"
+    private val off = "Off"
+
     private val tempNamingMap = mapOf(
         "28-021317ddaaaa" to "HLT",
         "28-0000042b50fd" to "Mash"
@@ -26,25 +29,34 @@ class RasPi {
     private lateinit var tempSensorMap: Map<String, Path>
     var hltTemperature: KVar<String> = KVar("")
     var mashTemperature: KVar<String> = KVar("")
+    var boilTemperature: KVar<String> = KVar("")
+    var hltTarget: KVar<String> = KVar("")
+    var boilTarget: KVar<String> = KVar("")
+    var hltEnabled = false
+    var boilEnabled = false
+    var hltEnabledText: KVar<String> = KVar(off)
+    var boilEnabledText: KVar<String> = KVar(off)
 
     // Pins:
     // See https://pinout.xyz/pinout/wiringpi for a mapping of pins.
     // Physical pin 40 is BCM 21 (what's on the breadboard) and WiringPi 29 (GPIO_29)
 
     init {
+        var tempSensorPath = Paths.get("/sys/bus/w1/devices")
         try {
             gpio = GpioFactory.getInstance()
             initialized = true
             pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_29, "LED", PinState.LOW)
             pin.setShutdownOptions(true, PinState.LOW)
         } catch (t: Throwable) {
+            // This happens on the development machine
             logger.error("Couldn't initialize Raspberry Pi GPIO pins")
+            tempSensorPath = Paths.get("/home/jeff/devices")
         }
 
-        val tempSensorPath = Files.list(Paths.get("/sys/bus/w1/devices"))
-//        val tempSensorPath = Files.list(Paths.get("/home/jeff/devices"))
-        tempSensorPath.use {
-            tempSensorMap = tempSensorPath
+        val tempSensorDir = Files.list(tempSensorPath)
+        tempSensorDir.use {
+            tempSensorMap = tempSensorDir
                 .filter { it.fileName.toString().startsWith("28") }
                 .toList()
                 .associate { path ->
@@ -62,11 +74,56 @@ class RasPi {
                         hltTemperature.value = temp.toString()
                     } else if (tempNamingMap[key] == "Mash") {
                         mashTemperature.value = temp.toString()
+                        boilTemperature.value = temp.toString()
                     }
 
                 }
                 delay(1000L)
             }
+        }
+    }
+
+    fun toggleHlt() {
+        val newHltValue = !hltEnabled
+        if (newHltValue && boilEnabled) {
+            shutdownBoil()
+        }
+        hltEnabled = newHltValue
+        updateHltText()
+    }
+
+    fun toggleBoil() {
+        val newBoilValue = !boilEnabled
+        if (newBoilValue && hltEnabled) {
+            shutdownHlt()
+        }
+        boilEnabled = newBoilValue
+        updateBoilText()
+    }
+
+    private fun shutdownHlt() {
+        hltEnabled = false
+        updateHltText()
+    }
+
+    private fun shutdownBoil() {
+        boilEnabled = false
+        updateBoilText()
+    }
+
+    private fun updateHltText() {
+        if (hltEnabled) {
+            hltEnabledText.value = on
+        } else {
+            hltEnabledText.value = off
+        }
+    }
+
+    private fun updateBoilText() {
+        if (boilEnabled) {
+            boilEnabledText.value = on
+        } else {
+            boilEnabledText.value = off
         }
     }
 
