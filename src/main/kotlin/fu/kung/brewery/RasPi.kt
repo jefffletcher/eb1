@@ -14,7 +14,7 @@ import kotlin.streams.toList
 class RasPi {
     private val logger = KotlinLogging.logger {}
 
-    private val on = "On"
+    private val on = "On "
     private val off = "Off"
 
     private val tempNamingMap = mapOf(
@@ -36,6 +36,11 @@ class RasPi {
     var boilEnabled = false
     var hltEnabledText: KVar<String> = KVar(off)
     var boilEnabledText: KVar<String> = KVar(off)
+
+    var waterPumpEnabled = false
+    var waterPumpEnabledText: KVar<String> = KVar(off)
+    var wortPumpEnabled = false
+    var wortPumpEnabledText: KVar<String> = KVar(off)
 
     // Pins:
     // See https://pinout.xyz/pinout/wiringpi for a mapping of pins.
@@ -124,6 +129,32 @@ class RasPi {
             boilEnabledText.value = on
         } else {
             boilEnabledText.value = off
+        }
+    }
+
+    fun toggleWaterPump() {
+        waterPumpEnabled = !waterPumpEnabled
+        updateWaterPumpText()
+    }
+
+    fun toggleWortPump() {
+        wortPumpEnabled = !wortPumpEnabled
+        updateWortPumpText()
+    }
+
+    private fun updateWaterPumpText() {
+        if (waterPumpEnabled) {
+            waterPumpEnabledText.value = on
+        } else {
+            waterPumpEnabledText.value = off
+        }
+    }
+
+    private fun updateWortPumpText() {
+        if (wortPumpEnabled) {
+            wortPumpEnabledText.value = on
+        } else {
+            wortPumpEnabledText.value = off
         }
     }
 

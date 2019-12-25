@@ -25,6 +25,9 @@ class BreweryApp {
 
     private var oneClicked = false
 
+    private var enabledClasses = "ui red button"
+    private var disabledClasses = "ui red inverted button"
+
 
     init {
         server = Kweb(port = 7777, debug = true, plugins = plugins, buildPage = {
@@ -48,30 +51,6 @@ class BreweryApp {
                         div(fomantic.ui.attached.segment).new {
                             div(fomantic.ui.horizontal.segments).new {
                                 div(fomantic.ui.segment).new {
-                                    p().text(control.hltTemperature.map { "HLT: $it °F" })
-                                    div(fomantic.ui.labeled.input).new {
-                                        a(fomantic.ui.label).text("Target")
-                                        val hltTarget = input(type = InputType.text)
-                                        hltTarget.value = control.hltTarget
-                                        val hltEnable =
-                                            button(fomantic.ui.red.inverted.button).text(control.hltEnabledText)
-                                        control.hltEnabledText.addListener { _, new ->
-                                            if (new == "Off") {
-                                                hltEnable.setClasses("ui red inverted button")
-                                            } else {
-                                                hltEnable.setClasses("ui red button")
-                                            }
-                                        }
-                                        hltEnable.on.click {
-                                            control.toggleHlt()
-                                            hltEnable.blur()
-                                        }
-                                    }
-                                }
-                                div(fomantic.ui.segment).new {
-                                    p().text(control.mashTemperature.map { "Mash: $it °F" })
-                                }
-                                div(fomantic.ui.segment).new {
                                     p().text(control.boilTemperature.map { "Boil: $it °F" })
                                     div(fomantic.ui.labeled.input).new {
                                         a(fomantic.ui.label).text("Target")
@@ -81,9 +60,9 @@ class BreweryApp {
                                             button(fomantic.ui.red.inverted.button).text(control.boilEnabledText)
                                         control.boilEnabledText.addListener { _, new ->
                                             if (new == "Off") {
-                                                boilEnable.setClasses("ui red inverted button")
+                                                boilEnable.setClasses(disabledClasses)
                                             } else {
-                                                boilEnable.setClasses("ui red button")
+                                                boilEnable.setClasses(enabledClasses)
                                             }
                                         }
                                         boilEnable.on.click {
@@ -92,21 +71,90 @@ class BreweryApp {
                                         }
                                     }
                                 }
+                                div(fomantic.ui.segment).new {
+                                    p().text(control.mashTemperature.map { "Mash: $it °F" })
+                                }
+                                div(fomantic.ui.segment).new {
+                                    p().text(control.hltTemperature.map { "HLT: $it °F" })
+                                    div(fomantic.ui.labeled.input).new {
+                                        a(fomantic.ui.label).text("Target")
+                                        val hltTarget = input(type = InputType.text)
+                                        hltTarget.value = control.hltTarget
+                                        val hltEnable =
+                                            button(fomantic.ui.red.inverted.button).text(control.hltEnabledText)
+                                        control.hltEnabledText.addListener { _, new ->
+                                            if (new == "Off") {
+                                                hltEnable.setClasses(disabledClasses)
+                                            } else {
+                                                hltEnable.setClasses(enabledClasses)
+                                            }
+                                        }
+                                        hltEnable.on.click {
+                                            control.toggleHlt()
+                                            hltEnable.blur()
+                                        }
+                                    }
+                                }
+                            }
+                            div(fomantic.ui.horizontal.segments).new {
+                                centeredContent() {
+                                    h2().text("Wort Pump")
+                                    val wortPumpEnable =
+                                        button(fomantic.ui.red.inverted.button).text(control.wortPumpEnabledText)
+                                    control.wortPumpEnabledText.addListener { _, new ->
+                                        if (new == "Off") {
+                                            wortPumpEnable.setClasses(disabledClasses)
+                                        } else {
+                                            wortPumpEnable.setClasses(enabledClasses)
+                                        }
+                                    }
+                                    wortPumpEnable.on.click {
+                                        control.toggleWortPump()
+                                        wortPumpEnable.blur()
+                                    }
+                                }
+                                centeredContent() {
+                                    h2().text("Water Pump") // <i>H<sub>2</sub>O</i>
+                                    val waterPumpEnable =
+                                        button(fomantic.ui.red.inverted.button).text(control.waterPumpEnabledText)
+                                    control.waterPumpEnabledText.addListener { _, new ->
+                                        if (new == "Off") {
+                                            waterPumpEnable.setClasses(disabledClasses)
+                                        } else {
+                                            waterPumpEnable.setClasses(enabledClasses)
+                                        }
+                                    }
+                                    waterPumpEnable.on.click {
+                                        control.toggleWaterPump()
+                                        waterPumpEnable.blur()
+                                    }
+                                }
                             }
                         }
-                        div(fomantic.ui.attached.segment).new {
-                            val shutdownButton = button(fomantic.ui.button).text("Shutdown")
-                            shutdownButton.on.click {
-                                control.shutdown()
-
-                                logger.info("User initiated shutdown. Exiting.")
-                                exitProcess(0)
-                            }
-                        }
+                        shutdownContent()
                     }
                 }
             }
         })
+    }
+
+    private fun ElementCreator<DivElement>.shutdownContent(
+    ) {
+        div(fomantic.ui.horizontal.segments).new { }
+        div(fomantic.ui.attached.segment).new {
+            div(fomantic.ui.grid).new {
+                div(fomantic.ui.one.column.row).new {
+                    div(fomantic.ui.right.aligned.column).new {
+                        val shutdownButton = button(fomantic.ui.button).text("Shutdown")
+                        shutdownButton.on.click {
+                            control.shutdown()
+                            logger.info("User initiated shutdown. Exiting.")
+                            exitProcess(0)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun ElementCreator<BodyElement>.pageBorderAndTitle(
@@ -118,6 +166,20 @@ class BreweryApp {
                 div(fomantic.ui.vertical.segment).new {
                     h1(fomantic.ui.dividing.header).text(title)
                     content(this)
+                }
+            }
+        }
+    }
+
+    private fun ElementCreator<DivElement>.centeredContent(
+        content: ElementCreator<DivElement>.() -> Unit
+    ) {
+        div(fomantic.ui.segment).new {
+            div(fomantic.ui.grid).new {
+                div(fomantic.ui.one.column.row).new {
+                    div(fomantic.ui.center.aligned.column).new {
+                        content(this)
+                    }
                 }
             }
         }
