@@ -1,41 +1,24 @@
 package fu.kung.brewery
 
-import kotlinx.coroutines.*
-import mu.KotlinLogging
+import io.kweb.shoebox.Shoebox
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.Instant
 
-class Timer {
-    private val logger = KotlinLogging.logger {}
-
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
-
-    private fun startCoroutineTimer(delayMillis: Long = 0, repeatMillis: Long = 0, action: () -> Unit) =
-        scope.launch(Dispatchers.IO) {
-            delay(delayMillis)
-            if (repeatMillis > 0) {
-                while (true) {
-                    action()
-                    delay(repeatMillis)
-                }
-            } else {
-                action()
-            }
-        }
-
-    private val timer: Job = startCoroutineTimer(delayMillis = 0, repeatMillis = 20000) {
-        logger.info("Background - tick")
-//        doSomethingBackground()
-        scope.launch(Dispatchers.Main) {
-            logger.info("Main thread - tick")
-//            doSomethingMainThread()
+class TimerStore(dir: Path) {
+    init {
+        if (Files.notExists(dir)) {
+            Files.createDirectory(dir)
         }
     }
 
-    fun startTimer() {
-        timer.start()
-    }
+    data class Timer(val uid: String, val listUid: String, val desc: String, val duration: Int, val created: Instant)
 
-    fun cancelTimer() {
-        timer.cancel()
-    }
+    val timers = Shoebox<Timer>(dir.resolve("timers"))
+
+    private val timersList = timers.view("timersList", Timer::listUid)
+
+    fun timersList(listUid: String) = timersList.orderedSet(listUid, compareBy(Timer::duration))
 }
+
+
