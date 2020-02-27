@@ -33,8 +33,6 @@ class BreweryApp {
     private val plugins = listOf(fomanticUIPlugin)
     private val server: Kweb
 
-    private var oneClicked = false
-
     private var enabledClasses = "ui red button"
     private var disabledClasses = "ui red inverted button"
 
@@ -45,20 +43,6 @@ class BreweryApp {
             doc.body.new {
                 pageBorderAndTitle("Electric Brewery") {
                     div(fomantic.column).new {
-                        div(fomantic.ui.top.attached.segment).new {
-                            val button1 = button(fomantic.ui.toggle.button).text("Off")
-                            button1.on.click {
-                                if (oneClicked) {
-                                    oneClicked = false
-                                    button1.text("Off")
-                                    control.toggle()
-                                } else {
-                                    oneClicked = true
-                                    button1.text("On")
-                                    control.toggle()
-                                }
-                            }
-                        }
                         div(fomantic.ui.attached.segment).new {
                             div(fomantic.ui.horizontal.segments).new {
                                 div(fomantic.ui.segment).new {
