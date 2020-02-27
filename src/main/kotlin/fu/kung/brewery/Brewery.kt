@@ -41,7 +41,7 @@ class BreweryApp {
     init {
         server = Kweb(port = 7777, debug = true, plugins = plugins, buildPage = {
             doc.body.new {
-                pageBorderAndTitle("Electric Brewery") {
+                pageBorderAndTitle("Cervecería Eléctrica del Sótano") {
                     div(fomantic.column).new {
                         div(fomantic.ui.attached.segment).new {
                             div(fomantic.ui.horizontal.segments).new {
@@ -217,7 +217,7 @@ class BreweryApp {
         div(fomantic.ui.main.container).new {
             div(fomantic.column).new {
                 div(fomantic.ui.vertical.segment).new {
-                    h1(fomantic.ui.dividing.header).text(title)
+                    h1(fomantic.ui.center.aligned.header).text(title)
                     content(this)
                 }
             }
