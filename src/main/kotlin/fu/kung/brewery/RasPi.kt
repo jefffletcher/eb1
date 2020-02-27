@@ -106,7 +106,8 @@ class RasPi {
         } else {
             boilPin.state = PinState.LOW
         }
-        updateBoilText()
+        updateText(boilEnabled, boilEnabledText)
+//        updateBoilText()
     }
 
     private fun shutdownHlt() {
@@ -118,7 +119,16 @@ class RasPi {
     private fun shutdownBoil() {
         boilEnabled = false
         boilPin.state = PinState.LOW
-        updateBoilText()
+        updateText(boilEnabled, boilEnabledText)
+//        updateBoilText()
+    }
+
+    private fun updateText(enabled: Boolean, textVar: KVar<String>) {
+        if (enabled) {
+            textVar.value = on
+        } else {
+            textVar.value = off
+        }
     }
 
     private fun updateHltText() {
