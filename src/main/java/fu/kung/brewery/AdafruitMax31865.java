@@ -105,29 +105,29 @@ import com.pi4j.wiringpi.Gpio;
  */
 public final class AdafruitMax31865 {
 
-    private static final int MAX31865_CONFIG_REG			= 0x00;
-    private static final int MAX31865_CONFIG_3WIRE			= 0x10;
-    private static final int MAX31865_CONFIG_FAULTSTAT		= 0x02;
-    private static final int MAX31865_CONFIG_BIAS			= 0x80;
-    private static final int MAX31865_CONFIG_1SHOT			= 0x20;
-    private static final int MAX31865_RTDMSB_REG			= 0x01;
-    private static final int MAX31856_CONFIG_MODEAUTO		= 0x40;
+    private static final int MAX31865_CONFIG_REG = 0x00;
+    private static final int MAX31865_CONFIG_3WIRE = 0x10;
+    private static final int MAX31865_CONFIG_FAULTSTAT = 0x02;
+    private static final int MAX31865_CONFIG_BIAS = 0x80;
+    private static final int MAX31865_CONFIG_1SHOT = 0x20;
+    private static final int MAX31865_RTDMSB_REG = 0x01;
+    private static final int MAX31856_CONFIG_MODEAUTO = 0x40;
 
-    private static final int MAX31856_FAULTSTAT_REG			= 0x07;
-    private static final int MAX31865_FAULT_HIGHTHRESH		= 0x80;
-    private static final int MAX31865_FAULT_LOWTHRESH		= 0x40;
-    private static final int MAX31865_FAULT_REFINLOW		= 0x20;
-    private static final int MAX31865_FAULT_REFINHIGH		= 0x10;
-    private static final int MAX31865_FAULT_RTDINLOW		= 0x08;
-    private static final int MAX31865_FAULT_OVUV			= 0x04;
+    private static final int MAX31856_FAULTSTAT_REG = 0x07;
+    private static final int MAX31865_FAULT_HIGHTHRESH = 0x80;
+    private static final int MAX31865_FAULT_LOWTHRESH = 0x40;
+    private static final int MAX31865_FAULT_REFINLOW = 0x20;
+    private static final int MAX31865_FAULT_REFINHIGH = 0x10;
+    private static final int MAX31865_FAULT_RTDINLOW = 0x08;
+    private static final int MAX31865_FAULT_OVUV = 0x04;
 
     private static final double RTD_A = 3.9083e-3;
     private static final double RTD_B = -5.775e-7;
 
-    private int cs;		// CS
-    private int mosi;	// MOSI (SDI)
-    private int miso;	// MISO (SDO)
-    private int sclk;	// SCLK (SCK)
+    private int cs;        // CS
+    private int mosi;    // MOSI (SDI)
+    private int miso;    // MISO (SDO)
+    private int sclk;    // SCLK (SCK)
 
     private Wires wires;
     private double rtdNominal;
@@ -156,12 +156,12 @@ public final class AdafruitMax31865 {
      * <br><br>
      * Check class level documentation for more details.
      *
-     * @param cs Chip Select pin. Drop it to low to start an SPI transaction. It's an input to the chip.
-     * @param mosi MOSI (Master Out Slave In) / SDI (Serial Data In) pin, for data sent from your processor to MAX31865.
-     * @param miso MISO (Master In Slave Out) / SDO (Serial Data Out) pin, for data sent from MAX31865 to your processor.
-     * @param sclk SCLK (SCK) (SPI Clock) pin. It's an input to the chip.
-     * @param wires Number of wires between MAX31865 and PT100/PT1000 sensor
-     * @param rtdNominal The 'nominal' 0-degrees-C resistance of the sensor. Use 100.0 for PT100 or 1000.0 for PT1000.
+     * @param cs          Chip Select pin. Drop it to low to start an SPI transaction. It's an input to the chip.
+     * @param mosi        MOSI (Master Out Slave In) / SDI (Serial Data In) pin, for data sent from your processor to MAX31865.
+     * @param miso        MISO (Master In Slave Out) / SDO (Serial Data Out) pin, for data sent from MAX31865 to your processor.
+     * @param sclk        SCLK (SCK) (SPI Clock) pin. It's an input to the chip.
+     * @param wires       Number of wires between MAX31865 and PT100/PT1000 sensor
+     * @param rtdNominal  The 'nominal' 0-degrees-C resistance of the sensor. Use 100.0 for PT100 or 1000.0 for PT1000.
      * @param refResistor The value of the Rref resistor. Use 430.0 for PT100 or 4300.0 for PT1000.
      */
     public AdafruitMax31865(int cs, int mosi, int miso, int sclk, Wires wires, double rtdNominal, double refResistor) {
@@ -225,7 +225,8 @@ public final class AdafruitMax31865 {
      * In compare to {@link AdafruitMax31865#reset()}, this method allows custom reset of CS (Chip Select) pin default mode and state.
      * <br><br>
      * Usually, it is {@code Gpio.OUTPUT} for mode, and {@code Gpio.HIGH} for state.
-     * @param csDefaultMode Use {@link Gpio} constants
+     *
+     * @param csDefaultMode  Use {@link Gpio} constants
      * @param csDefaultState Use {@link Gpio} constants
      */
     public void reset(int csDefaultMode, int csDefaultState) {
@@ -247,11 +248,9 @@ public final class AdafruitMax31865 {
      * <br><br>
      * <i>This method sleeps the thread for 75 milliseconds in total.</i>
      *
-     * @see AdafruitMax31865#resistance()
-     *
-     * @see AdafruitMax31865#temperature()
-     *
      * @return raw RTD value
+     * @see AdafruitMax31865#resistance()
+     * @see AdafruitMax31865#temperature()
      */
     public int readRTD() {
         clearFault();
@@ -268,7 +267,7 @@ public final class AdafruitMax31865 {
 
         int rtd = readRegister16(MAX31865_RTDMSB_REG);
 
-        rtd >>= 1;	// Remove fault bit.
+        rtd >>= 1;    // Remove fault bit.
 
         return rtd;
     }
@@ -276,9 +275,8 @@ public final class AdafruitMax31865 {
     /**
      * Convert RTD value to resistance.
      *
-     * @see AdafruitMax31865#temperature()
-     *
      * @return resistance value
+     * @see AdafruitMax31865#temperature()
      */
     public double resistance() {
         double resistance = readRTD();
@@ -331,9 +329,8 @@ public final class AdafruitMax31865 {
      * <br>
      * Use {@link AdafruitMax31865#clearFault()} to clear the fault state of the sensor.
      *
-     * @see Fault
-     *
      * @return raw fault value
+     * @see Fault
      */
     public int readFault() {
         return readRegister8(MAX31856_FAULTSTAT_REG);
@@ -349,12 +346,12 @@ public final class AdafruitMax31865 {
     public Fault getFault() {
         int rawFault = readFault();
 
-        boolean highthresh	= bool(rawFault & MAX31865_FAULT_HIGHTHRESH);
-        boolean lowthresh	= bool(rawFault & MAX31865_FAULT_LOWTHRESH);
-        boolean refinlow	= bool(rawFault & MAX31865_FAULT_REFINLOW);
-        boolean refinhigh	= bool(rawFault & MAX31865_FAULT_REFINHIGH);
-        boolean rtdinlow	= bool(rawFault & MAX31865_FAULT_RTDINLOW);
-        boolean ovuv		= bool(rawFault & MAX31865_FAULT_OVUV);
+        boolean highthresh = bool(rawFault & MAX31865_FAULT_HIGHTHRESH);
+        boolean lowthresh = bool(rawFault & MAX31865_FAULT_LOWTHRESH);
+        boolean refinlow = bool(rawFault & MAX31865_FAULT_REFINLOW);
+        boolean refinhigh = bool(rawFault & MAX31865_FAULT_REFINHIGH);
+        boolean rtdinlow = bool(rawFault & MAX31865_FAULT_RTDINLOW);
+        boolean ovuv = bool(rawFault & MAX31865_FAULT_OVUV);
 
         return new Fault(highthresh, lowthresh, refinlow, refinhigh, rtdinlow, ovuv);
     }
@@ -488,7 +485,7 @@ public final class AdafruitMax31865 {
     }
 
     private void readRegisterN(int addr, int[] buffer, int n) {
-        addr &= 0x7F;	// make sure top bit is not set
+        addr &= 0x7F;    // make sure top bit is not set
 
         Gpio.digitalWrite(sclk, Gpio.LOW);
 
@@ -504,13 +501,13 @@ public final class AdafruitMax31865 {
     }
 
     private int readRegister8(int addr) {
-        int[] buffer = new int[] {0};
+        int[] buffer = new int[]{0};
         readRegisterN(addr, buffer, 1);
         return buffer[0];
     }
 
     private int readRegister16(int addr) {
-        int[] buffer = new int[] {0, 0};
+        int[] buffer = new int[]{0, 0};
         readRegisterN(addr, buffer, 2);
 
         int ret = buffer[0];
@@ -537,7 +534,8 @@ public final class AdafruitMax31865 {
     private void sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {
+        }
     }
 
     private boolean bool(int value) {

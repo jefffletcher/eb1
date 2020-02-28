@@ -61,7 +61,7 @@ class BreweryApp {
                                             }
                                         }
                                         boilEnable.on.click {
-                                            control.toggleBoil()
+                                            control.toggleBoilEnabled()
                                             boilEnable.blur()
                                         }
                                     }
@@ -85,7 +85,7 @@ class BreweryApp {
                                             }
                                         }
                                         hltEnable.on.click {
-                                            control.toggleHlt()
+                                            control.toggleHltEnabled()
                                             hltEnable.blur()
                                         }
                                     }

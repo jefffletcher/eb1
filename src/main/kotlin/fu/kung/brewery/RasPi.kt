@@ -40,6 +40,10 @@ class RasPi {
     private var wortPumpEnabled = false
     var wortPumpEnabledText: KVar<String> = KVar(off)
 
+    private val dutyTimeMillis = 2000L
+    private val targetDutyPercent = .65
+    private val rampUpTargetPercent = .95
+
     // Pins:
     // See https://pinout.xyz/pinout/wiringpi for a mapping of pins.
     // Physical pin 40 is BCM 21 (what's on the breadboard) and WiringPi 29 (GPIO_29)
@@ -79,27 +83,102 @@ class RasPi {
                 delay(1000L)
             }
         }
+
+        // cycle HLT element
+        GlobalScope.launch {
+            while (true) {
+                var actualDutyPercent = 0.0
+                var targetTemp: Double
+                try {
+                    targetTemp = hltTarget.value.toDouble()
+                } catch (e: Exception) {
+                    if (hltTarget.value.isNotEmpty()) {
+                        logger.info("Invalid HLT target temperature '$hltTarget.value'.")
+                    }
+                    delay(dutyTimeMillis)
+                    continue
+                }
+                if (hltEnabled) {
+                    actualDutyPercent =
+                        getDutyPercent(hltTemperature.value.toDouble(), targetTemp)
+
+                    if (actualDutyPercent > 0) {
+                        // Fire element
+                        hltPin.state = PinState.HIGH
+                        delay((dutyTimeMillis * actualDutyPercent).toLong())
+                    }
+                }
+
+                if (actualDutyPercent < 1.0) {
+                    if (hltPin.isHigh) {
+                        // Shutdown element
+                        hltPin.state = PinState.LOW
+                    }
+                    delay((dutyTimeMillis * (1.0 - actualDutyPercent)).toLong())
+                }
+            }
+        }
+
+        // cycle Boil element
+        GlobalScope.launch {
+            while (true) {
+                var actualDutyPercent = 0.0
+                var targetTemp: Double
+                try {
+                    targetTemp = boilTarget.value.toDouble()
+                } catch (e: Exception) {
+                    if (boilTarget.value.isNotEmpty()) {
+                        logger.info("Invalid boil target temperature '$boilTarget.value'.")
+                    }
+                    delay(dutyTimeMillis)
+                    continue
+                }
+                if (boilEnabled) {
+                    actualDutyPercent =
+                        getDutyPercent(boilTemperature.value.toDouble(), targetTemp)
+
+                    if (actualDutyPercent > 0) {
+                        // Fire element
+                        boilPin.state = PinState.HIGH
+                        delay((dutyTimeMillis * actualDutyPercent).toLong())
+                    }
+                }
+
+                if (actualDutyPercent < 1.0) {
+                    if (boilPin.isHigh) {
+                        // Shutdown element
+                        boilPin.state = PinState.LOW
+                    }
+                    delay((dutyTimeMillis * (1.0 - actualDutyPercent)).toLong())
+                }
+            }
+        }
     }
 
-    fun toggleHlt() {
+    private fun getDutyPercent(currentTemp: Double, targetTemp: Double): Double {
+        val tempPercent = currentTemp / targetTemp
+        if (tempPercent < rampUpTargetPercent) {
+            // ramping up, full power
+            return 1.0
+        } else if (currentTemp < targetTemp) {
+            // done ramping up, maintain temp
+            return targetDutyPercent
+        }
+
+        // over target
+        return 0.0
+    }
+
+    fun toggleHltEnabled() {
+        shutdownBoil()
         val newHltValue = !hltEnabled
-        if (newHltValue && boilEnabled) {
-            shutdownBoil()
-        }
         hltEnabled = newHltValue
-        if (hltEnabled) {
-            hltPin.state = PinState.HIGH
-        } else {
-            hltPin.state = PinState.LOW
-        }
-        updateHltText()
+        updateText(hltEnabled, hltEnabledText)
     }
 
-    fun toggleBoil() {
+    fun toggleBoilEnabled() {
+        shutdownHlt()
         val newBoilValue = !boilEnabled
-        if (newBoilValue && hltEnabled) {
-            shutdownHlt()
-        }
         boilEnabled = newBoilValue
         if (boilEnabled) {
             boilPin.state = PinState.HIGH
@@ -107,20 +186,30 @@ class RasPi {
             boilPin.state = PinState.LOW
         }
         updateText(boilEnabled, boilEnabledText)
-//        updateBoilText()
     }
 
     private fun shutdownHlt() {
         hltEnabled = false
         hltPin.state = PinState.LOW
-        updateHltText()
+        updateText(hltEnabled, hltEnabledText)
     }
 
     private fun shutdownBoil() {
         boilEnabled = false
         boilPin.state = PinState.LOW
         updateText(boilEnabled, boilEnabledText)
-//        updateBoilText()
+    }
+
+    fun toggleWaterPump() {
+        waterPumpEnabled = !waterPumpEnabled
+        waterPumpPin.toggle()
+        updateText(waterPumpEnabled, waterPumpEnabledText)
+    }
+
+    fun toggleWortPump() {
+        wortPumpEnabled = !wortPumpEnabled
+        wortPumpPin.toggle()
+        updateText(wortPumpEnabled, wortPumpEnabledText)
     }
 
     private fun updateText(enabled: Boolean, textVar: KVar<String>) {
@@ -131,57 +220,17 @@ class RasPi {
         }
     }
 
-    private fun updateHltText() {
-        if (hltEnabled) {
-            hltEnabledText.value = on
-        } else {
-            hltEnabledText.value = off
-        }
-    }
-
-    private fun updateBoilText() {
-        if (boilEnabled) {
-            boilEnabledText.value = on
-        } else {
-            boilEnabledText.value = off
-        }
-    }
-
-    fun toggleWaterPump() {
-        waterPumpEnabled = !waterPumpEnabled
-        waterPumpPin.toggle()
-        updateWaterPumpText()
-    }
-
-    fun toggleWortPump() {
-        wortPumpEnabled = !wortPumpEnabled
-        wortPumpPin.toggle()
-        updateWortPumpText()
-    }
-
-    private fun updateWaterPumpText() {
-        if (waterPumpEnabled) {
-            waterPumpEnabledText.value = on
-        } else {
-            waterPumpEnabledText.value = off
-        }
-    }
-
-    private fun updateWortPumpText() {
-        if (wortPumpEnabled) {
-            wortPumpEnabledText.value = on
-        } else {
-            wortPumpEnabledText.value = off
-        }
-    }
-
     fun shutdown() {
         if (!initialized) {
             return
         }
         logger.info("Shutting down RasPi controller.")
-        gpio.shutdown()
+        hltPin.state = PinState.LOW
+        boilPin.state = PinState.LOW
+        wortPumpPin.state = PinState.LOW
+        waterPumpPin.state = PinState.LOW
         hltMax31865.reset()
+        gpio.shutdown()
     }
 
     private fun tempToDegreesF(temp: Double): Int {
