@@ -33,6 +33,9 @@ class BreweryApp {
     private val plugins = listOf(fomanticUIPlugin)
     private val server: Kweb
 
+    private var shutdownEnabledText: KVar<String> = KVar("Enable Shutdown")
+    private var enableShutdown = false
+
     private var enabledClasses = "ui red button"
     private var disabledClasses = "ui red inverted button"
 
@@ -68,6 +71,11 @@ class BreweryApp {
                                 }
                                 div(fomantic.ui.segment).new {
                                     h3().text(control.mashTemperature.map { "Mash: $it °F" })
+                                    div(fomantic.ui.labeled.input).new {
+                                        a(fomantic.ui.label).text("Delta")
+                                        val mashDelta = input(type = InputType.text)
+                                        mashDelta.value = control.mashDelta
+                                    }
                                 }
                                 div(fomantic.ui.segment).new {
                                     h3().text(control.hltTemperature.map { "HLT: $it °F" })
@@ -134,7 +142,17 @@ class BreweryApp {
                                 div(fomantic.right.floated.content).new {
                                     renderShutdownButton()
                                 }
-                                div(fomantic.content).text("Enable shutdown")
+                                val shutdownEnable =
+                                    button(fomantic.ui.red.inverted.button).text(shutdownEnabledText)
+                                shutdownEnable.on.click {
+                                    enableShutdown = !enableShutdown
+                                    if (enableShutdown) {
+                                        shutdownEnable.setClasses(enabledClasses)
+                                    } else {
+                                        shutdownEnable.setClasses(disabledClasses)
+                                    }
+                                    shutdownEnable.blur()
+                                }
                             }
                         }
                     }
@@ -204,9 +222,11 @@ class BreweryApp {
             i(fomantic.warning.icon)
         }
         button.on.click {
-            control.shutdown()
-            logger.info("User initiated shutdown. Exiting.")
-            exitProcess(0)
+            if (enableShutdown) {
+                control.shutdown()
+                logger.info("User initiated shutdown. Exiting.")
+                exitProcess(0)
+            }
         }
     }
 

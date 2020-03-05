@@ -6,7 +6,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import kotlin.math.roundToInt
 
 class RasPi {
     private val logger = KotlinLogging.logger {}
@@ -29,20 +28,19 @@ class RasPi {
     var mashTemperature: KVar<String> = KVar("")
     var boilTemperature: KVar<String> = KVar("")
     var hltTarget: KVar<String> = KVar("")
+    var mashDelta: KVar<String> = KVar("1.0")
     var boilTarget: KVar<String> = KVar("")
     private var hltEnabled = false
     private var boilEnabled = false
     var hltEnabledText: KVar<String> = KVar(off)
     var boilEnabledText: KVar<String> = KVar(off)
 
-    private var waterPumpEnabled = false
     var waterPumpEnabledText: KVar<String> = KVar(off)
-    private var wortPumpEnabled = false
     var wortPumpEnabledText: KVar<String> = KVar(off)
 
     private val dutyTimeMillis = 2000L
     private val targetDutyPercent = .65
-    private val rampUpTargetPercent = .95
+    private val rampUpTargetPercent = .98
 
     // Pins:
     // See https://pinout.xyz/pinout/wiringpi for a mapping of pins.
@@ -77,9 +75,9 @@ class RasPi {
 
         GlobalScope.launch {
             while (true) {
-                hltTemperature.value = tempToDegreesF(hltMax31865.temperature()).toString()
-                mashTemperature.value = tempToDegreesF(mashMax31865.temperature()).toString()
-                boilTemperature.value = tempToDegreesF(boilMax31865.temperature()).toString()
+                hltTemperature.value = tempToDegF(hltMax31865.temperature())
+                mashTemperature.value = tempToDegF(mashMax31865.temperature())
+                boilTemperature.value = tempToDegF(boilMax31865.temperature())
                 delay(1000L)
             }
         }
@@ -90,11 +88,8 @@ class RasPi {
                 var actualDutyPercent = 0.0
                 var targetTemp: Double
                 try {
-                    targetTemp = hltTarget.value.toDouble()
+                    targetTemp = hltTarget.value.toDouble() + mashDelta.value.toDouble()
                 } catch (e: Exception) {
-                    if (hltTarget.value.isNotEmpty()) {
-                        logger.info("Invalid HLT target temperature '$hltTarget.value'.")
-                    }
                     delay(dutyTimeMillis)
                     continue
                 }
@@ -201,15 +196,13 @@ class RasPi {
     }
 
     fun toggleWaterPump() {
-        waterPumpEnabled = !waterPumpEnabled
         waterPumpPin.toggle()
-        updateText(waterPumpEnabled, waterPumpEnabledText)
+        updateText(waterPumpPin.isHigh, waterPumpEnabledText)
     }
 
     fun toggleWortPump() {
-        wortPumpEnabled = !wortPumpEnabled
         wortPumpPin.toggle()
-        updateText(wortPumpEnabled, wortPumpEnabledText)
+        updateText(wortPumpPin.isHigh, wortPumpEnabledText)
     }
 
     private fun updateText(enabled: Boolean, textVar: KVar<String>) {
@@ -230,10 +223,12 @@ class RasPi {
         wortPumpPin.state = PinState.LOW
         waterPumpPin.state = PinState.LOW
         hltMax31865.reset()
+        mashMax31865.reset()
+        boilMax31865.reset()
         gpio.shutdown()
     }
 
-    private fun tempToDegreesF(temp: Double): Int {
-        return (temp * 9.0 / 5.0 + 32.0).roundToInt()
+    private fun tempToDegF(temp: Double): String {
+        return "%.1f".format(temp * 9.0 / 5.0 + 32.0)
     }
 }
