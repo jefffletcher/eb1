@@ -24,19 +24,19 @@ class RasPi {
     private lateinit var mashMax31865: AdafruitMax31865
     private lateinit var boilMax31865: AdafruitMax31865
 
-    var hltTemperature: KVar<String> = KVar("")
-    var mashTemperature: KVar<String> = KVar("")
-    var boilTemperature: KVar<String> = KVar("")
-    var hltTarget: KVar<String> = KVar("")
-    var mashDelta: KVar<String> = KVar("1.0")
-    var boilTarget: KVar<String> = KVar("")
+    val hltTemperature: KVar<String> = KVar("")
+    val mashTemperature: KVar<String> = KVar("")
+    val boilTemperature: KVar<String> = KVar("")
+    val hltTarget: KVar<String> = KVar("")
+    val mashDelta: KVar<String> = KVar("1.0")
+    val boilTarget: KVar<String> = KVar("")
     private var hltEnabled = false
     private var boilEnabled = false
-    var hltEnabledText: KVar<String> = KVar(off)
-    var boilEnabledText: KVar<String> = KVar(off)
+    val hltEnabledText: KVar<String> = KVar(off)
+    val boilEnabledText: KVar<String> = KVar(off)
 
-    var waterPumpEnabledText: KVar<String> = KVar(off)
-    var wortPumpEnabledText: KVar<String> = KVar(off)
+    val waterPumpEnabledText: KVar<String> = KVar(off)
+    val wortPumpEnabledText: KVar<String> = KVar(off)
 
     private val dutyTimeMillis = 2000L
     private val targetDutyPercent = .65

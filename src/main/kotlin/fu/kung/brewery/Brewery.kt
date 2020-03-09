@@ -11,11 +11,14 @@ import io.kweb.random
 import io.kweb.state.KVar
 import io.kweb.state.render.renderEach
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import java.nio.file.Paths
+import java.time.Duration
 import java.time.Instant
+import kotlin.math.absoluteValue
 import kotlin.system.exitProcess
 
 // Written specifically for a Raspberry Pi 3 Model B+
@@ -159,7 +162,23 @@ class BreweryApp {
                 }
             }
         })
+
+        GlobalScope.launch {
+            while (true) {
+                try {
+                    timersMap.values.forEach { timer ->
+                        logger.info("Updating ${timer.desc} to ${getTimerText(timer)} ")
+                        timer.displayText.value = getTimerText(timer)
+                    }
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
+                delay(1000L)
+            }
+        }
     }
+
+    private val timersMap = mutableMapOf<String, TimerStore.Timer>()
 
     private fun ElementCreator<*>.renderList() {
         h3().text("Timers")
@@ -174,13 +193,16 @@ class BreweryApp {
         }
         div(fomantic.ui.middle.aligned.divided.list).new {
             renderEach(timerStore.timersList(appId)) { timer ->
+                logger.info("In here ${timer.value.desc}")
+                timersMap[timer.value.uid] = timer.value
+                timer.value.displayText = KVar(getTimerText(timer.value))
                 div(fomantic.item).new {
                     div(fomantic.right.floated.content).new {
                         renderRemoveButton(timer)
                     }
-                    div(fomantic.content).text(
-                        "${timer.value.desc} - ${timer.value.duration}"
-                    )
+                    div(fomantic.content).new {
+                        h3().text(timer.value.displayText.map { it })
+                    }
                 }
             }
         }
@@ -189,18 +211,33 @@ class BreweryApp {
     private fun handleAddItem(timerDesc: InputElement, timerDuration: InputElement) {
         GlobalScope.launch {
             val newTimerDescription = timerDesc.getValue().await()
-            val newTimerDuration = timerDuration.getValue().await()
+            val newTimerDuration = timerDuration.getValue().await().toInt()
             timerDesc.setValue("")
             timerDuration.setValue("")
             val newTimer = TimerStore.Timer(
                 uid = generateNewUid(),
                 listUid = appId,
                 desc = newTimerDescription,
-                duration = newTimerDuration.toInt(),
-                created = Instant.now()
+                duration = newTimerDuration,
+                endTime = Instant.now() + Duration.ofMinutes(newTimerDuration.toLong()),
+                displayText = KVar(newTimerDescription)
             )
             timerStore.timers[newTimer.uid] = newTimer
+            timersMap[newTimer.uid] = newTimer
         }
+    }
+
+    private fun getTimerText(timer: TimerStore.Timer): String {
+        val duration = Duration.between(Instant.now(), timer.endTime)
+        if (duration.toMillis() > 0) {
+            return "${timer.desc} - ${formatDuration(duration)}    (${timer.duration})"
+        }
+        return "IT'S TIME - ${timer.desc} - ${formatDuration(duration)}    (${timer.duration})"
+    }
+
+    private fun formatDuration(duration: Duration): String {
+        val s = duration.seconds.absoluteValue
+        return String.format("%d:%02d", (s % 3600) / 60, s % 60)
     }
 
     private fun generateNewUid() = random.nextInt(100_000_000).toString(16)
@@ -211,6 +248,7 @@ class BreweryApp {
             i(fomantic.trash.icon)
         }
         button.on.click {
+            timersMap.remove(timer.value.uid)
             timerStore.timers.remove(timer.value.uid)
         }
     }
